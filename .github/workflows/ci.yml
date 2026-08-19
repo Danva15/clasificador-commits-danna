@@ -10,6 +10,21 @@ jobs:
   calidad:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: github_assistant
+          POSTGRES_USER: app_user
+          POSTGRES_PASSWORD: app_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app_user -d github_assistant"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Descargar el codigo
         uses: actions/checkout@v4
@@ -22,6 +37,21 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci
+
+      - name: Crear tabla de PostgreSQL
+        env:
+          PGPASSWORD: app_password
+        run: |
+          psql -h localhost -U app_user -d github_assistant -f db/init.sql
+
+      - name: Ejecutar pruebas
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: github_assistant
+          DB_USER: app_user
+          DB_PASSWORD: app_password
+        run: npm test
 
       - name: Verificar sintaxis
         run: node --check src/server.js

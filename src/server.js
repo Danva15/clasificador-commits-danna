@@ -88,7 +88,7 @@ app.post('/analyses', async (request, response) => {
       summary,
       risks,
       suggestions
-    } = req.body;
+    } = request.body;
 
     const resultado = await conexionPostgres.query(
       `INSERT INTO analyses
@@ -257,6 +257,13 @@ app.get('/inferencias', async (request, response) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
+  });
+}
+
+module.exports = {
+  app,
+  clasificarEco
+};
